@@ -9,19 +9,20 @@ import time
 SCREEN_X = 600
 SCREEN_Y = 600
 
-
+# What make a snake dead.
 def isdead(my_id, snakes):
-    # 撞墙
+    # Hit the wall.
     if snakes[my_id].body[0].x not in range(SCREEN_X):
         return True
     if snakes[my_id].body[0].y not in range(SCREEN_Y):
         return True
-    # 撞自己
+    # Hit itself.
     for key in snakes.keys():
         if snakes[my_id].body[0] in snakes[key].body[1:]:
             return True
     return False
 
+# Print text on the screen.
 def text_to_screen(screen, text, x, y, size = 50,
             color = (200, 000, 000)):
 
@@ -38,12 +39,13 @@ socket2.setsockopt(zmq.RCVTIMEO, 500)
 socket2.connect("tcp://localhost:5050")
 socket2.setsockopt_string(zmq.SUBSCRIBE, '')
 
-#开始界面
+
+# Starting interface
 pygame.init()
 pygame.font.init()
 screen_size = (SCREEN_X, SCREEN_Y)
 screen = pygame.display.set_mode(screen_size)
-#print text
+# print text
 myfont = pygame.font.SysFont('Big', 25)
 myfont1 = pygame.font.SysFont('Small', 15)
 welcome = myfont.render('Welcome To Gluttonous Snake !',False,(255,0,255))
@@ -61,12 +63,12 @@ g_image = pygame.image.load('green.png')
 screen.blit(g_image,(350,290))
 b_image = pygame.image.load('blue.png')
 screen.blit(b_image,(50,260))
-#显示
+# show on the screen
 pygame.display.update()      #update
 pygame.display.set_caption('Snake')
 clock = pygame.time.Clock()
 
-#snake初始化
+#snake initialization
 snakes = {}
 snake0 = Snake(10)
 snake1 = Snake(590)
@@ -74,13 +76,13 @@ snakes['b'] = snake0
 snakes['g'] = snake1
 my_id = 'x'
 
-#是否死了
+# if dead
 dead = {'b':False,'g':False}
 
-#分数
+# current score
 scores = {'b':0,'g':0}
 
-#food初始化
+# food initialization
 foodrect = []
 
 cur = 0
@@ -99,7 +101,7 @@ while True:
     if my_id == 'b' or my_id == 'g':
         break
 
-
+# Player choose his own snake.
 yourchoice = myfont.render('Your choice',False,(255,0,0))
 if my_id == 'b':
     screen.blit(yourchoice,(100,500))
@@ -118,13 +120,13 @@ while True:
     if start_signal == "start":
         break
 
-
+# At the beginning, print some food.
 for i in range(5):
     food = Food()
     food.set()
     socket1.send_string("put %d %d %d %d" % (food.rect.left, food.rect.top, 10, 10))
 
-
+# During the game.
 while True:
     try:
         string = socket2.recv_string()
@@ -146,14 +148,14 @@ while True:
         elif msg_type == 'put':
             left = int(string.split()[1])
             top = int(string.split()[2])
-            #新食物
+            # Put on a new food
             new_food = Food()
             new_food.rect = pygame.Rect(left, top, 10, 10)
             foodrect.append(new_food.rect)
         elif msg_type == 'remove':
             left = int(string.split()[1])
             top = int(string.split()[2])
-            #被吃掉的食物
+            # Deal with the eaten food
             rect = pygame.Rect(left, top, 10, 10)
             foodrect.remove(rect)
             snakes[string.split()[5]].addnode(0)
@@ -179,7 +181,7 @@ while True:
     screen.fill((0,0,0))
 
 
-    # 显示死亡文字
+    # Show death message
     if isdead(my_id, snakes) and dead[my_id]==False:
         socket1.send_string("dead " + my_id)
         if (True in dead.values()):
@@ -190,16 +192,13 @@ while True:
             dietext = myfont.render('YOU DEAD!',False,(255,0,0))
             screen.blit(dietext,(200,280))
             pygame.display.update()
-    # 食物处理 / 吃到+50分
-    # 当食物rect与蛇头重合
+    # Win 50 points if eat a food - head of the snake = food
     if snakes[my_id].body[0] in foodrect:
-        #吃掉
+        # Eat
         socket1.send_string("remove %d %d %d %d %c" % (snakes[my_id].body[0].left,snakes[my_id].body[0].top, 10, 10,my_id))
-        #显示
+        # Show
         cur = pygame.time.get_ticks()
-        #Snake增加一个Node，加分
-        #socket1.send_string("add %c" % my_id)
-        #补食物
+        # Food replenish
         new_food = Food()
         new_food.set()
         socket1.send_string("put %d %d %d %d" % (new_food.rect.left, new_food.rect.top, 10, 10))
@@ -211,7 +210,7 @@ while True:
         blue = random.choice(range(255))
         pygame.draw.rect(screen, (red, green, blue), f, 0)
     if cur != 0 and pygame.time.get_ticks() - cur < 2000:
-        eat = myfont.render('+50', False, (255, 0, 0))  #显示加分
+        eat = myfont.render('+50', False, (255, 0, 0))
         screen.blit(eat, (300, 20))
     for id in dead.keys():
         if not dead[id]:
@@ -223,7 +222,7 @@ while True:
                 for rect in snakes[id].body:
                     pygame.draw.rect(screen, (0,255,255), rect, 0)
             scores[id] += pygame.time.get_ticks() / 100
-    score_t1 = myfont1.render('blue snake:%d' % scores['b'], False, (0, 255, 255))  # 显示分数
+    score_t1 = myfont1.render('blue snake:%d' % scores['b'], False, (0, 255, 255)) 
     screen.blit(score_t1, (500, 550))
     score_t2 = myfont1.render('green snake:%d' % scores['g'], False, (0, 255, 0))
     screen.blit(score_t2, (500, 560))

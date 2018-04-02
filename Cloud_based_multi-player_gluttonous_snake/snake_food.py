@@ -3,7 +3,7 @@ import random
 
 
 class Snake(object):
-    # 初始化各种需要的属性 [开始时默认向右/身体块x5]
+    # Initialize states. body = 5.
     def __init__(self, a):
         if a == 10:
             self.dirction = pygame.K_RIGHT
@@ -13,7 +13,7 @@ class Snake(object):
         for x in range(10):
             self.addnode(a)
 
-    # 无论何时 都在前端增加蛇块
+    # Add a node at the head of the snake.
     def addnode(self, a):
         left, top = (a, a)
         if self.body:
@@ -29,11 +29,10 @@ class Snake(object):
             node.top += 10
         self.body.insert(0, node)
 
-    # 删除最后一个块
+    # Delete a node at the tail
     def delnode(self):
         self.body.pop()
 
-    # 死亡判断
     # def isdead(self):
     #     # 撞墙
     #     if self.body[0].x not in range(SCREEN_X):
@@ -45,12 +44,12 @@ class Snake(object):
     #         return True
     #     return False
 
-    # 移动！
+    # Move forward.
     def move(self):
         self.addnode(0)
         self.delnode()
 
-    # 改变方向 但是左右、上下不能被逆向改变
+    # Change snake's direction but connot make a u-turn.
     def changedirection(self, curkey):
         LR = [pygame.K_LEFT, pygame.K_RIGHT]
         UD = [pygame.K_UP, pygame.K_DOWN]
@@ -72,7 +71,7 @@ class Food:
     def set(self):
         if self.rect.x == -10:
             allpos = []
-            # 不靠墙太近 25 ~ SCREEN_X-25 之间
+            # Don't go too close to the wall. between 25 ~ SCREEN_X-25
             for pos in range(30, 600 - 30, 10):
                 allpos.append(pos)
             self.rect.left = random.choice(allpos)
